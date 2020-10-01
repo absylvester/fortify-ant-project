@@ -1,0 +1,94 @@
+<project name="fortify-java-project" basedir="." xmlns:ivy="antlib:org.apache.ivy.ant">
+  <property name="src.dir" location="src" />
+  <property name="lib.dir" location="lib" />
+  <property name="build.dir" location="build" />
+  <property name="build.classes.dir" location="build/classes" />
+  <property name="test.dir" location="test" />
+  <property name="test.classes.dir" location="${test.dir}/classes" />
+  <property name="dist.dir" location="dist" />
+
+  <path id="compile.classpath">
+     <fileset dir="lib">
+         <include name="*.jar" />
+     </fileset>
+  </path>
+
+  <path id="build.classpath">
+     <path refid="compile.classpath"/>
+     <pathelement location="${build.classes.dir}" />
+  </path>
+
+  <path id="test.compile.classpath">
+     <path refid="compile.classpath" />
+     <pathelement location="${build.classes.dir}" />
+  </path>
+
+  <path id="test.classpath">
+     <path refid="build.classpath" />
+     <pathelement location="${test.classes.dir}" />
+  </path>
+
+  <target name="init">
+      <mkdir dir="${build.classes.dir}" />
+  </target>
+
+  <target name="resolve"  depends="init">
+     <ivy:resolve file="ivy.xml"/>
+  </target>
+
+  <target name="retrieve" depends="resolve">
+     <ivy:retrieve pattern="${lib.dir}/[artifact]-[type]-[revision].[ext]" />
+  </target>
+
+  <target name="compile" depends="resolve,retrieve">
+      <javac srcdir="${src.dir}" 
+             debug="true"
+             includeAntRuntime="true"
+             destdir="${build.classes.dir}">
+        <classpath refid="build.classpath" />
+      </javac>
+  </target>
+
+  <target name="test-init" depends="compile">
+      <mkdir dir="${test.classes.dir}" />
+  </target>
+
+  <target name="test-compile" depends="compile,test-init">
+       <javac srcdir="${test.dir}"  
+             debug="true" 
+             includeAntRuntime="true" 
+             destdir="${test.classes.dir}">
+        <classpath refid="test.compile.classpath" />
+        </javac>
+  </target>
+
+  <target name="test" depends="test-compile">
+     <junit printsummary="true" haltonfailure="true">
+         <classpath refid="test.classpath"/>
+         <formatter type="brief" usefile="false" />
+         <test name=" " />
+     </junit>
+  </target>
+
+  <target name="execute" depends="test">
+     <java classname="Main" classpath="${build.classes.dir}">
+     </java>
+  </target>
+
+  <target name="package" depends="execute">
+
+
+  </target>
+
+  <target name="artifactory-publish" depends="execute">
+      <ivy:publish resolver="publish" pubrevision="${project.version}" overwrite="true"
+        artifactspattern="${dist.dir}/[artifact]-[revision].[ext]"/>
+  </target>
+
+  <target name="clean">
+      <delete dir="${build.classes.dir}" />
+      <delete dir="${test.classes.dir}" />
+  </target>
+
+
+</project>
