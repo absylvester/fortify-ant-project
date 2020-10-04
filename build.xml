@@ -1,4 +1,7 @@
 <project name="fortify-java-project" basedir="." xmlns:ivy="antlib:org.apache.ivy.ant">
+  <property name="project.name" value="${ant.project.name}" />
+  <property name="project.version" value="1.0" />
+  <property name="target.name" value="${project.name}-${project.version}.jar" />
   <property name="src.dir" location="src" />
   <property name="lib.dir" location="lib" />
   <property name="build.dir" location="build" />
@@ -6,6 +9,7 @@
   <property name="test.dir" location="test" />
   <property name="test.classes.dir" location="${test.dir}/classes" />
   <property name="dist.dir" location="dist" />
+  <property name="target.jar" value="${dist.dir}/${target.name}" />
 
   <path id="compile.classpath">
      <fileset dir="lib">
@@ -30,6 +34,8 @@
 
   <target name="init">
       <mkdir dir="${build.classes.dir}" />
+      <mkdir dir="${lib.dir}" />
+      <mkdir dir="${dist.dir}" />
   </target>
 
   <target name="resolve"  depends="init">
@@ -47,6 +53,27 @@
              destdir="${build.classes.dir}">
         <classpath refid="build.classpath" />
       </javac>
+      <move todir="${build.classes.dir}">
+          <fileset dir="${lib.dir}">
+             <include name="**/log4j*"/>
+             <exclude name="**/*.jar" />
+          </fileset>
+      </move>
+  </target>
+
+  <target name="log4j-move" depends="compile">
+     <move todir="${build.classes.dir}">
+          <filelist dir="${lib.dir}">
+             <file name="log4j-api-jar-2.13.3.jar"/>
+             <file name="log4j-core-jar-2.13.3.jar" />
+          </filelist>
+      </move>
+     <move todir="${build.classes.dir}">
+          <filelist dir="${src.dir}">
+             <file name="log4j2.xml"/>
+             <file name="log4j2.properties"/>
+          </filelist>
+      </move>
   </target>
 
   <target name="test-init" depends="compile">
@@ -65,19 +92,39 @@
   <target name="test" depends="test-compile">
      <junit printsummary="true" haltonfailure="true">
          <classpath refid="test.classpath"/>
+         <classpath refid="test.compile.classpath" />
          <formatter type="brief" usefile="false" />
-         <test name=" " />
+         <test name="EntryToLogTest" />
      </junit>
   </target>
 
   <target name="execute" depends="test">
-     <java classname="Main" classpath="${build.classes.dir}">
+     <java fork="true" classname="EntryToLogRunner" classpath="${build.classes.dir}">
+         <classpath refid="build.classpath" />
+         <arg line="OpenSesame!" />
      </java>
   </target>
 
   <target name="package" depends="execute">
-
-
+      <move todir="${build.classes.dir}">
+          <fileset dir="${lib.dir}">
+             <filename name="**/log4j-*"/>
+          </fileset>
+      </move>
+      <copy todir="${build.classes.dir}">
+          <filelist dir="${src.dir}/resources">
+             <file name="log4j2.xml"/>
+             <file name="log4j2.properties"/>
+          </filelist>
+      </copy>
+     <jar destfile="${target.jar}" duplicate="preserve" compress="true" >
+      <fileset dir="${build.classes.dir}"/>
+      <fileset dir="${lib.dir}" />
+       <manifest>
+          <attribute name="Main-Class" value="EntryToLogRunner" />
+          <attribute name="Class-Path" value="${base.dir}" />
+       </manifest>
+    </jar>
   </target>
 
   <target name="artifactory-publish" depends="execute">
@@ -88,7 +135,13 @@
   <target name="clean">
       <delete dir="${build.classes.dir}" />
       <delete dir="${test.classes.dir}" />
+      <delete dir="${lib.dir}" />
+      <delete dir="${dist.dir}" />
   </target>
 
+  <target name="print-version"> 
+   <echo>Java/JVM version: ${ant.java.version}</echo> 
+   <echo>Java/JVM detail version: ${java.version}</echo> 
+  </target>
 
 </project>
