@@ -1,4 +1,6 @@
 <project name="fortify-java-project" basedir="." xmlns:ivy="antlib:org.apache.ivy.ant">
+
+<!-- Properties for various directories defined -->
   <property name="project.name" value="${ant.project.name}" />
   <property name="project.version" value="1.0" />
   <property name="target.name" value="${project.name}-${project.version}.jar" />
@@ -11,6 +13,7 @@
   <property name="dist.dir" location="dist" />
   <property name="target.jar" value="${dist.dir}/${target.name}" />
 
+<!-- Classpaths defined to be referred later during the process -->
   <path id="compile.classpath">
      <fileset dir="lib">
          <include name="*.jar" />
@@ -32,6 +35,7 @@
      <pathelement location="${test.classes.dir}" />
   </path>
 
+<!-- Targets made.  Build process begins here -->
   <target name="init">
       <mkdir dir="${build.classes.dir}" />
       <mkdir dir="${lib.dir}" />
@@ -98,6 +102,7 @@
      </junit>
   </target>
 
+<!-- For Execute, fork attribute was added to avoid ClassCastException.  Need to find a way to pass the key "OpenSesame!" -->
   <target name="execute" depends="test">
      <java fork="true" classname="EntryToLogRunner" classpath="${build.classes.dir}">
          <classpath refid="build.classpath" />
@@ -106,11 +111,6 @@
   </target>
 
   <target name="package" depends="execute">
-      <move todir="${build.classes.dir}">
-          <fileset dir="${lib.dir}">
-             <filename name="**/log4j-*"/>
-          </fileset>
-      </move>
       <copy todir="${build.classes.dir}">
           <filelist dir="${src.dir}/resources">
              <file name="log4j2.xml"/>
@@ -119,26 +119,30 @@
       </copy>
      <jar destfile="${target.jar}" duplicate="preserve" compress="true" >
       <fileset dir="${build.classes.dir}"/>
-      <fileset dir="${lib.dir}" />
+      <fileset dir="${lib.dir}" >
+         <filename name="log4j-*"/>
+      </fileset>
        <manifest>
           <attribute name="Main-Class" value="EntryToLogRunner" />
-          <attribute name="Class-Path" value="${base.dir}" />
+          <attribute name="Class-Path" value="log4j-api-jar-2.13.3.jar log4j-api-javadoc-2.13.3.jar log4j-api-source-2.13.3.jar log4j-api-test-jar-2.13.3.jar log4j-bundle-1.2.17.jar log4j-core-jar-2.13.3.jar log4j-core-javadoc-2.13.3.jar log4j-core-source-2.13.3.jar commons-logging-jar-1.2.jar" />
        </manifest>
     </jar>
   </target>
 
-  <target name="artifactory-publish" depends="execute">
-      <ivy:publish resolver="publish" pubrevision="${project.version}" overwrite="true"
+<!-- Jar file is published to Artifactory and several directories are deleted -->
+  <target name="artifactory-publish" depends="package">
+      <ivy:publish resolver="artifactory-publish" pubrevision="${project.version}" overwrite="true"
         artifactspattern="${dist.dir}/[artifact]-[revision].[ext]"/>
   </target>
 
-  <target name="clean">
+  <target name="clean" depends="artifactory-publish">
       <delete dir="${build.classes.dir}" />
       <delete dir="${test.classes.dir}" />
       <delete dir="${lib.dir}" />
       <delete dir="${dist.dir}" />
   </target>
 
+<!-- Separate target used to show the Java version Ant uses -->
   <target name="print-version"> 
    <echo>Java/JVM version: ${ant.java.version}</echo> 
    <echo>Java/JVM detail version: ${java.version}</echo> 
