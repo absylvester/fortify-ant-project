@@ -1,14 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ivy-module version="2.0">
-   <info organisation="com.fortify" module="fortify-entry-project" />
+   <info organisation="com.fortify" module="fortify-java-project" />
    <publications>
-       <artifact name="fortify-entry-project" type="jar" ext="jar"/>
+       <artifact name="fortify-java-project" type="jar" ext="jar"/>
    </publications>
    <dependencies>
       <dependency org="commons-lang" name="commons-lang" rev="2.0"/>
       <dependency org="commons-cli" name="commons-cli" rev="1.0"/>
       <dependency org="junit" name="junit" rev="4.13"/>
-      <dependency org="org.apache.logging.log4j" name="log4j-api" rev="2.8.2"/>
-      <dependency org="org.apache.logging.log4j" name="log4j-core" rev="2.8.2"/>
+      <dependency org="org.apache.logging.log4j" name="log4j-api" rev="2.13.3">
+         <exclude module="log4j-api-java9" />
+      </dependency>
+      <dependency org="org.apache.logging.log4j" name="log4j-core" rev="2.13.3">
+         <exclude module="log4j-core-java9" />
+      </dependency>
    </dependencies>
 </ivy-module>

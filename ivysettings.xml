@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ivy-settings>
+  <settings defaultResolver="main" />
+  <!--Authentication required for publishing (deployment). 'Artifactory Realm' is the realm used by Artifactory so don't change it.-->
+  <credentials host="asylvester.jfrog.io" realm="Artifactory Realm" username="build" passwd="buildUser01" />
+  <resolvers>
+    <chain name="main">
+      <ibiblio name="publish" m2compatible="true" root="https://asylvester.jfrog.io/artifactory/lib-releases-virtual" />
+    </chain>
+    <url name="artifactory-publish">
+        <!-- You can use  m2compatible="true" instead of specifying your own pattern -->
+        <artifact pattern=
+          "https://asylvester.jfrog.io/artifactory/fortify-java-project/[organization]/[module]/[revision]/[artifact]-[revision].[ext]"/>
+        <ivy pattern="https://asylvester.jfrog.io/artifactory/fortify-java-project/[organization]/[module]/[revision]/ivy-[revision].xml" />
+    </url>
+  </resolvers>
+</ivy-settings>
